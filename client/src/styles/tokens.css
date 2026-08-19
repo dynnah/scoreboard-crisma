@@ -1,0 +1,150 @@
+/* Fonte local (arquivo .woff2 em client/public/fonts — nunca via CDN/@import externo) */
+@font-face {
+  font-family: "Glacial Indifference";
+  src: url("/fonts/GlacialIndifference-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Glacial Indifference";
+  src: url("/fonts/GlacialIndifference-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Paleta oficial da pastoral — tema claro (mesmas 8 cores do brief,
+     papéis invertidos: fundo claro dominante, vermelho reservado pra
+     destaque/ação em vez de ser a cor de fundo). */
+  --bg-app: #fff7f7;
+  --bg-panel: #f1cece;
+  --bg-card: #ffffff;
+  --red-support: #8f2826;
+  --red-primary: #aa3734;
+  --gold-accent: #c9972b;
+  --text-primary: #390202;
+  --text-secondary: #8f2826;
+  --text-on-accent: #fff7f7;
+  --border-subtle: rgba(57, 2, 2, 0.14);
+
+  /* Glassmorfismo: painéis/cards translúcidos com blur, flutuando sobre
+     os "borrões" de cor decorativos fixados no fundo da página. */
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg-strong: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: blur(18px);
+  --glass-shadow: 0 8px 32px rgba(57, 2, 2, 0.12);
+
+  --font-body: "Glacial Indifference", "Segoe UI", system-ui, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --shadow-panel: 0 8px 20px rgba(57, 2, 2, 0.1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Manchas de cor fixas atrás do conteúdo — é o que dá profundidade ao
+   glassmorfismo dos painéis (sem elas o blur não tem o que revelar). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(170, 55, 52, 0.16), transparent 38%),
+    radial-gradient(circle at 88% 15%, rgba(201, 151, 43, 0.18), transparent 42%),
+    radial-gradient(circle at 20% 92%, rgba(143, 40, 38, 0.14), transparent 40%),
+    radial-gradient(circle at 90% 88%, rgba(201, 151, 43, 0.12), transparent 40%);
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+  color: inherit;
+  font-size: 1rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: var(--red-primary);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-sm);
+  padding: 0.6em 1em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--red-support);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 0.55em 0.75em;
+}
+
+input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.65;
+}
+
+input:focus,
+select:focus,
+button:focus-visible {
+  outline: 2px solid var(--gold-accent);
+  outline-offset: 2px;
+}

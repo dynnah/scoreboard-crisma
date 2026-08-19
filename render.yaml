@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gincana-crisma
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: AUTH_USER
+        value: crisma
+      - key: AUTH_PASSWORD
+        sync: false

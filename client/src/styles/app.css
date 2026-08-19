@@ -48,6 +48,7 @@
 .admin-view__header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-subtle);
@@ -140,8 +141,54 @@
 }
 
 @media (max-width: 560px) {
+  .admin-view {
+    padding: 1.25rem 1rem;
+  }
+
+  .admin-view__header h1 {
+    font-size: 1.15rem;
+  }
+
   .admin-view__team-grid {
     grid-template-columns: 1fr;
+  }
+
+  .team-card__free-score input[name="amount"] {
+    order: 1;
+    flex: 0 0 6rem;
+  }
+
+  .team-card__free-score button {
+    order: 2;
+    flex: 1 1 auto;
+  }
+
+  .team-card__free-score input[name="reason"] {
+    order: 3;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .log-list__item {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "time team delta" "reason reason reason";
+    row-gap: 0.3rem;
+  }
+
+  .log-list__time {
+    grid-area: time;
+  }
+
+  .log-list__team {
+    grid-area: team;
+  }
+
+  .log-list__delta {
+    grid-area: delta;
+  }
+
+  .log-list__reason {
+    grid-area: reason;
   }
 }
 
@@ -411,6 +458,8 @@
 .log-list__team {
   font-weight: 700;
   color: var(--text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .log-list__delta {
@@ -429,6 +478,8 @@
 
 .log-list__reason {
   color: var(--text-secondary);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .log-list__empty {
@@ -453,6 +504,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 0.5rem;
   position: relative;
   background: var(--glass-bg);
@@ -474,6 +526,7 @@
   font-size: clamp(2rem, 5vw, 3.5rem);
   letter-spacing: 0.03em;
   color: var(--text-primary);
+  text-align: center;
 }
 
 .telao-view__offline-badge {

@@ -4,6 +4,7 @@ import { useSocketState } from "../hooks/useSocketState";
 import { TeamCard } from "../components/TeamCard";
 import { TimerControl } from "../components/TimerControl";
 import { LogList } from "../components/LogList";
+import { medalFor, rankTeams } from "../utils/ranking";
 import type { HistoryKind } from "../types";
 
 const TIMER_PRESETS = [30, 60, 90, 120] as const;
@@ -19,8 +20,10 @@ export function AdminView() {
   }
 
   // A ordem dos cards fica fixa (ordem de cadastro) mesmo com a pontuação
-  // mudando — só o líder (pro ícone de chama) é calculado por pontuação.
-  const leaderId = [...state.teams].sort((a, b) => b.score - a.score)[0]?.id;
+  // mudando — as medalhas são calculadas por pontuação, mas os cards não
+  // pulam de lugar, senão fica difícil achar o time certo pontuando.
+  const sortedTeams = [...state.teams].sort((a, b) => b.score - a.score);
+  const ranks = rankTeams(sortedTeams);
 
   const handleAddTeam = (e: FormEvent) => {
     e.preventDefault();
@@ -97,7 +100,7 @@ export function AdminView() {
             <TeamCard
               key={team.id}
               team={team}
-              isLeader={team.id === leaderId && team.score > 0}
+              medal={medalFor(team, ranks.get(team.id) ?? 0)}
               onQuickDelta={(delta, reason, kind) => handleQuickDelta(team.id, delta, reason, kind)}
               onFreeScore={(amount, reason) => handleFreeScore(team.id, amount, reason)}
               onRemove={() => handleRemoveTeam(team.id)}

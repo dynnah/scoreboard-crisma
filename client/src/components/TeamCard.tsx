@@ -1,16 +1,17 @@
 import type { FormEvent } from "react";
 import type { Team } from "../types";
-import { LeaderFlame } from "./LeaderFlame";
+import { TrophyIcon } from "./TrophyIcon";
+import { RANK_COLOR_CLASS, RANK_LABELS } from "../utils/ranking";
 
 interface TeamCardProps {
   team: Team;
-  isLeader: boolean;
+  medal: 1 | 2 | 3 | null;
   onQuickDelta: (delta: number, reason: string, kind: "correct" | "incorrect" | "no-answer") => void;
   onFreeScore: (amount: number, reason: string) => void;
   onRemove: () => void;
 }
 
-export function TeamCard({ team, isLeader, onQuickDelta, onFreeScore, onRemove }: TeamCardProps) {
+export function TeamCard({ team, medal, onQuickDelta, onFreeScore, onRemove }: TeamCardProps) {
   const handleFreeScore = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -22,13 +23,16 @@ export function TeamCard({ team, isLeader, onQuickDelta, onFreeScore, onRemove }
   };
 
   return (
-    <div className={`team-card${isLeader ? " team-card--leader" : ""}`} style={{ borderColor: team.color }}>
+    <div className={`team-card${medal === 1 ? " team-card--leader" : ""}`} style={{ borderColor: team.color }}>
       <div className="team-card__header">
         <span className="team-card__swatch" style={{ background: team.color }} />
-        <h3 className="team-card__name">
-          {isLeader && <LeaderFlame className="team-card__flame" />}
-          {team.name}
-        </h3>
+        <h3 className="team-card__name">{team.name}</h3>
+        {medal && (
+          <span className={`team-card__rank-badge team-card__rank-badge--${RANK_COLOR_CLASS[medal - 1]}`}>
+            <TrophyIcon className="team-card__rank-trophy" />
+            {RANK_LABELS[medal - 1]}
+          </span>
+        )}
         <button
           type="button"
           className="team-card__remove"

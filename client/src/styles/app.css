@@ -1,5 +1,4 @@
-/* ---------- assinatura visual: chama/raio dourado sobre a equipe líder ---------- */
-
+/* Usado no "tempo esgotado" do cronômetro (admin e telão). */
 @keyframes flame-pulse {
   0%,
   100% {
@@ -10,12 +9,6 @@
     opacity: 1;
     transform: scale(1.12);
   }
-}
-
-.leader-flame {
-  color: var(--gold-accent);
-  animation: flame-pulse 2.2s ease-in-out infinite;
-  flex-shrink: 0;
 }
 
 /* ---------- loading states ---------- */
@@ -280,6 +273,38 @@
   align-items: center;
   gap: 0.4em;
   overflow-wrap: anywhere;
+}
+
+.team-card__rank-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  color: var(--text-on-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.25em 0.55em;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.team-card__rank-badge--gold {
+  background: var(--gold-accent);
+}
+
+.team-card__rank-badge--silver {
+  background: var(--silver-accent);
+}
+
+.team-card__rank-badge--bronze {
+  background: var(--bronze-accent);
+}
+
+.team-card__rank-trophy {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
 }
 
 .team-card__remove {
@@ -609,11 +634,10 @@
   box-shadow: 0 0 0 3px var(--gold-accent), var(--glass-shadow);
 }
 
-.telao-view__leader-badge {
+.telao-view__rank-badge {
   display: flex;
   align-items: center;
   gap: 0.3em;
-  background: var(--gold-accent);
   color: var(--text-on-accent);
   font-size: clamp(0.75rem, 1.2vw, 1rem);
   font-weight: 700;
@@ -624,15 +648,22 @@
   flex-shrink: 0;
 }
 
-/* Dentro do badge dourado a chama precisa inverter de cor, senão ela
-   some contra o próprio fundo (mesmo tom de dourado). */
-.telao-view__leader-badge .leader-flame {
-  color: var(--text-on-accent);
-  animation: none;
+.telao-view__rank-badge--gold {
+  background: var(--gold-accent);
 }
 
-.telao-view__leader-badge .leader-flame__core {
-  fill: var(--gold-accent);
+.telao-view__rank-badge--silver {
+  background: var(--silver-accent);
+}
+
+.telao-view__rank-badge--bronze {
+  background: var(--bronze-accent);
+}
+
+.telao-view__rank-trophy {
+  width: 1.3em;
+  height: 1.3em;
+  flex-shrink: 0;
 }
 
 .telao-view__team-swatch {
@@ -642,10 +673,6 @@
   min-height: 18px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.telao-view__flame {
-  font-size: 1.3em;
 }
 
 .telao-view__team-name {
@@ -761,5 +788,37 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.winner-announcement__rest-medal {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  color: var(--text-on-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2em 0.55em;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.winner-announcement__rest-medal--gold {
+  background: var(--gold-accent);
+}
+
+.winner-announcement__rest-medal--silver {
+  background: var(--silver-accent);
+}
+
+.winner-announcement__rest-medal--bronze {
+  background: var(--bronze-accent);
+}
+
+.winner-announcement__rest-trophy {
+  width: 1.1em;
+  height: 1.1em;
   flex-shrink: 0;
 }

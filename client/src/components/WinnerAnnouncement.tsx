@@ -1,26 +1,6 @@
 import type { Team } from "../types";
-
-function TrophyIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="winner-announcement__trophy"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
-  );
-}
+import { TrophyIcon } from "./TrophyIcon";
+import { RANK_COLOR_CLASS, RANK_LABELS, medalFor, rankTeams } from "../utils/ranking";
 
 interface WinnerAnnouncementProps {
   teams: Team[];
@@ -30,11 +10,13 @@ export function WinnerAnnouncement({ teams }: WinnerAnnouncementProps) {
   const topScore = teams.length > 0 ? Math.max(...teams.map((t) => t.score)) : 0;
   const winners = teams.filter((t) => t.score === topScore);
   const isTie = winners.length > 1;
-  const rest = [...teams].sort((a, b) => b.score - a.score).filter((t) => t.score !== topScore);
+  const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+  const ranks = rankTeams(sortedTeams);
+  const rest = sortedTeams.filter((t) => t.score !== topScore);
 
   return (
     <div className="winner-announcement">
-      <TrophyIcon />
+      <TrophyIcon className="winner-announcement__trophy" />
       <div className="winner-announcement__label">{isTie ? "Empate entre" : "Equipe vencedora"}</div>
 
       <div className="winner-announcement__names">
@@ -49,13 +31,24 @@ export function WinnerAnnouncement({ teams }: WinnerAnnouncementProps) {
 
       {rest.length > 0 && (
         <ol className="winner-announcement__rest">
-          {rest.map((team) => (
-            <li key={team.id}>
-              <span className="winner-announcement__rest-swatch" style={{ background: team.color }} />
-              <span>{team.name}</span>
-              <span>{team.score}</span>
-            </li>
-          ))}
+          {rest.map((team) => {
+            const medal = medalFor(team, ranks.get(team.id) ?? 0);
+            return (
+              <li key={team.id}>
+                <span className="winner-announcement__rest-swatch" style={{ background: team.color }} />
+                <span>{team.name}</span>
+                {medal && (
+                  <span
+                    className={`winner-announcement__rest-medal winner-announcement__rest-medal--${RANK_COLOR_CLASS[medal - 1]}`}
+                  >
+                    <TrophyIcon className="winner-announcement__rest-trophy" />
+                    {RANK_LABELS[medal - 1]}
+                  </span>
+                )}
+                <span>{team.score}</span>
+              </li>
+            );
+          })}
         </ol>
       )}
     </div>

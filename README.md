@@ -41,13 +41,20 @@ Cada equipe começa com **100 pontos**.
 - **Cronômetro** por prova, com atalhos de 30/60/90/120s ou um valor
   customizado. Calculado por timestamp — não perde a contagem certa mesmo se
   o processo cair no meio de uma rodada.
+- **Colocação ao vivo**: as 3 equipes na frente ganham um selo de troféu
+  (ouro, prata, bronze) tanto no painel do administrador quanto no Telão. Em
+  caso de empate as equipes dividem a colocação e a seguinte pula (dois times
+  em 2º, o próximo é 4º). A ordem das equipes na tela é sempre fixa (ordem de
+  cadastro) — só o selo muda, pra ninguém perder o time de vista enquanto a
+  pontuação muda ao vivo.
 - **Denúncia**: quando uma equipe flagra outra colando, vira um único evento
   no histórico (dois lançamentos ligados); desfazer reverte os dois juntos.
 - **Desfazer última ação**: reverte o lançamento (ou par de lançamentos) mais
   recente.
 - **Reiniciar tudo**: zera equipes, pontos, histórico e cronômetro.
 - **Finalizar jogo**: troca o Telão por um anúncio em destaque da equipe
-  vencedora, com tratamento de empate.
+  vencedora, com tratamento de empate e os selos de prata/bronze na lista das
+  demais equipes.
 
 Regras que são só do evento em si, sem lógica no sistema: proibido celular,
 roteiro, catecismo ou anotações durante as provas.

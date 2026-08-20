@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSocketState } from "../hooks/useSocketState";
 import { computeRemainingMs, formatMs } from "../components/TimerControl";
-import { LeaderFlame } from "../components/LeaderFlame";
+import { TrophyIcon } from "../components/TrophyIcon";
 import { WinnerAnnouncement } from "../components/WinnerAnnouncement";
+import { RANK_COLOR_CLASS, RANK_LABELS, medalFor, rankTeams } from "../utils/ranking";
 
 function ClockIcon() {
   return (
@@ -36,8 +37,12 @@ export function TelaoView() {
     return <div className="telao-view telao-view--loading">Conectando ao servidor...</div>;
   }
 
+  // Mesma lógica do painel do admin: a ordem das linhas fica fixa (ordem de
+  // cadastro), só a medalha indica a colocação — senão as linhas ficariam
+  // trocando de lugar na tela toda hora que alguém pontua, o que atrapalha
+  // quem tá acompanhando de longe.
   const sortedTeams = [...state.teams].sort((a, b) => b.score - a.score);
-  const leaderId = sortedTeams[0]?.id;
+  const ranks = rankTeams(sortedTeams);
   const remainingMs = computeRemainingMs(state.timer);
   const isZero = state.timer.status === "ended" || remainingMs <= 0;
 
@@ -63,23 +68,28 @@ export function TelaoView() {
           </div>
 
           <ol className="telao-view__scoreboard">
-            {sortedTeams.map((team) => (
-              <li
-                key={team.id}
-                className={`telao-view__team${team.id === leaderId && team.score > 0 ? " telao-view__team--leader" : ""}`}
-                style={{ borderColor: team.color }}
-              >
-                <span className="telao-view__team-swatch" style={{ background: team.color }} />
-                {team.id === leaderId && team.score > 0 && (
-                  <span className="telao-view__leader-badge">
-                    <LeaderFlame className="telao-view__flame" />
-                    Líder
-                  </span>
-                )}
-                <span className="telao-view__team-name">{team.name}</span>
-                <span className="telao-view__team-score">{team.score}</span>
-              </li>
-            ))}
+            {state.teams.map((team) => {
+              const rank = ranks.get(team.id) ?? 0;
+              const medal = medalFor(team, rank);
+              const medalClass = medal ? RANK_COLOR_CLASS[medal - 1] : "";
+              return (
+                <li
+                  key={team.id}
+                  className={`telao-view__team${medal === 1 ? " telao-view__team--leader" : ""}`}
+                  style={{ borderColor: team.color }}
+                >
+                  <span className="telao-view__team-swatch" style={{ background: team.color }} />
+                  <span className="telao-view__team-name">{team.name}</span>
+                  {medal && (
+                    <span className={`telao-view__rank-badge telao-view__rank-badge--${medalClass}`}>
+                      <TrophyIcon className="telao-view__rank-trophy" />
+                      {RANK_LABELS[medal - 1]}
+                    </span>
+                  )}
+                  <span className="telao-view__team-score">{team.score}</span>
+                </li>
+              );
+            })}
           </ol>
         </>
       )}

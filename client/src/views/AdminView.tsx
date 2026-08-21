@@ -3,9 +3,10 @@ import type { FormEvent } from "react";
 import { useSocketState } from "../hooks/useSocketState";
 import { TeamCard } from "../components/TeamCard";
 import { TimerControl } from "../components/TimerControl";
+import { QuestionBank } from "../components/QuestionBank";
 import { LogList } from "../components/LogList";
 import { medalFor, rankTeams } from "../utils/ranking";
-import type { HistoryKind } from "../types";
+import type { HistoryKind, QuestionKind } from "../types";
 
 const TIMER_PRESETS = [30, 60, 90, 120] as const;
 
@@ -14,6 +15,7 @@ export function AdminView() {
   const [newTeamName, setNewTeamName] = useState("");
   const [flaggedTeamId, setFlaggedTeamId] = useState("");
   const [accuserTeamId, setAccuserTeamId] = useState("");
+  const [startingScoreInput, setStartingScoreInput] = useState("");
 
   if (!state) {
     return <div className="admin-view admin-view--loading">Conectando ao servidor...</div>;
@@ -30,6 +32,14 @@ export function AdminView() {
     if (!newTeamName.trim()) return;
     socket.emit("team:add", { name: newTeamName.trim() });
     setNewTeamName("");
+  };
+
+  const handleSetStartingScore = (e: FormEvent) => {
+    e.preventDefault();
+    const value = Number(startingScoreInput);
+    if (!Number.isFinite(value)) return;
+    socket.emit("startingScore:set", { value });
+    setStartingScoreInput("");
   };
 
   const handleRemoveTeam = (teamId: string) => {
@@ -58,7 +68,11 @@ export function AdminView() {
   const handleUndo = () => socket.emit("history:undo");
 
   const handleResetAll = () => {
-    if (window.confirm("Reiniciar tudo? Isso zera equipes, pontos, histórico e cronômetro.")) {
+    if (
+      window.confirm(
+        "Reiniciar tudo? Isso zera equipes, pontos, histórico, cronômetro e o banco de perguntas (as imagens enviadas também são apagadas).",
+      )
+    ) {
       socket.emit("system:resetAll");
     }
   };
@@ -70,6 +84,23 @@ export function AdminView() {
   };
 
   const handleResumeGame = () => socket.emit("game:resume");
+
+  const handleAddQuestion = (input: {
+    kind: QuestionKind;
+    label?: string;
+    prompt?: string;
+    options?: string[];
+    correctOptionIndex?: number;
+    imageUrl?: string;
+  }) => socket.emit("question:add", input);
+
+  const handleRemoveQuestion = (questionId: string) => socket.emit("question:remove", { questionId });
+
+  const handleShowQuestion = (questionId: string) => socket.emit("question:show", { questionId });
+
+  const handleRevealAnswer = () => socket.emit("question:reveal");
+
+  const handleHideQuestion = () => socket.emit("question:hide");
 
   return (
     <div className="admin-view">
@@ -85,6 +116,21 @@ export function AdminView() {
       </header>
 
       <section className="admin-view__teams">
+        <div className="admin-view__starting-score">
+          <span>
+            Pontuação inicial das novas equipes: <strong>{state.startingScore}</strong>
+          </span>
+          <form onSubmit={handleSetStartingScore}>
+            <input
+              type="number"
+              placeholder="Novo valor"
+              value={startingScoreInput}
+              onChange={(e) => setStartingScoreInput(e.target.value)}
+            />
+            <button type="submit">Definir</button>
+          </form>
+        </div>
+
         <form onSubmit={handleAddTeam} className="admin-view__add-team">
           <input
             type="text"
@@ -144,6 +190,18 @@ export function AdminView() {
           onStart={() => socket.emit("timer:start")}
           onPause={() => socket.emit("timer:pause")}
           onReset={() => socket.emit("timer:reset")}
+        />
+      </section>
+
+      <section className="admin-view__questions">
+        <h2>Perguntas</h2>
+        <QuestionBank
+          questions={state.questions}
+          onAdd={handleAddQuestion}
+          onRemove={handleRemoveQuestion}
+          onShow={handleShowQuestion}
+          onReveal={handleRevealAnswer}
+          onHide={handleHideQuestion}
         />
       </section>
 

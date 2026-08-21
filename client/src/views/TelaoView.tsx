@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSocketState } from "../hooks/useSocketState";
 import { computeRemainingMs, formatMs } from "../components/TimerControl";
+import { QuestionDisplay } from "../components/QuestionDisplay";
 import { TrophyIcon } from "../components/TrophyIcon";
 import { WinnerAnnouncement } from "../components/WinnerAnnouncement";
 import { RANK_COLOR_CLASS, RANK_LABELS, medalFor, rankTeams } from "../utils/ranking";
@@ -37,38 +38,52 @@ export function TelaoView() {
     return <div className="telao-view telao-view--loading">Conectando ao servidor...</div>;
   }
 
-  // Mesma lógica do painel do admin: a ordem das linhas fica fixa (ordem de
-  // cadastro), só a medalha indica a colocação — senão as linhas ficariam
-  // trocando de lugar na tela toda hora que alguém pontua, o que atrapalha
-  // quem tá acompanhando de longe.
+  // Diferente do painel do admin (onde a ordem fica fixa pra facilitar achar
+  // o time certo enquanto pontua): no Telão as linhas seguem a colocação ao
+  // vivo, pra quem está assistindo acompanhar a disputa subindo/descendo.
   const sortedTeams = [...state.teams].sort((a, b) => b.score - a.score);
   const ranks = rankTeams(sortedTeams);
   const remainingMs = computeRemainingMs(state.timer, clockOffsetMs);
   const isZero = state.timer.status === "ended" || remainingMs <= 0;
+  const activeQuestion =
+    state.questions.items.find((q) => q.id === state.questions.activeQuestionId) ?? null;
+
+  // O cronômetro fica visível tanto no placar normal quanto durante uma
+  // pergunta — enquanto a prova rola tem tempo de resposta/ação correndo,
+  // então some só na tela de vencedor (onde o jogo já acabou). Durante a
+  // pergunta ele encolhe pra um canto, deixando o card ocupar o centro.
+  const timerBlock = (
+    <div className={`telao-view__timer-block${activeQuestion ? " telao-view__timer-block--compact" : ""}`}>
+      <div className="telao-view__timer-label">
+        <ClockIcon /> Cronômetro
+      </div>
+      <div className={`telao-view__timer${isZero ? " telao-view__timer--zero" : ""}`}>
+        {formatMs(remainingMs)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="telao-view">
       <header className="telao-view__header">
         <img src="/logo.png" alt="" className="telao-view__logo" />
-        <h1>Placar da Disputa</h1>
+        <h1>{!state.gameEnded && activeQuestion ? "Hora da Disputa" : "Placar da Disputa"}</h1>
         {!connected && <span className="telao-view__offline-badge">Reconectando...</span>}
       </header>
 
       {state.gameEnded ? (
         <WinnerAnnouncement teams={state.teams} />
+      ) : activeQuestion ? (
+        <>
+          {timerBlock}
+          <QuestionDisplay question={activeQuestion} revealed={state.questions.revealed} />
+        </>
       ) : (
         <>
-          <div className="telao-view__timer-block">
-            <div className="telao-view__timer-label">
-              <ClockIcon /> Cronômetro
-            </div>
-            <div className={`telao-view__timer${isZero ? " telao-view__timer--zero" : ""}`}>
-              {formatMs(remainingMs)}
-            </div>
-          </div>
+          {timerBlock}
 
           <ol className="telao-view__scoreboard">
-            {state.teams.map((team) => {
+            {sortedTeams.map((team) => {
               const rank = ranks.get(team.id) ?? 0;
               const medal = medalFor(team, rank);
               const medalClass = medal ? RANK_COLOR_CLASS[medal - 1] : "";

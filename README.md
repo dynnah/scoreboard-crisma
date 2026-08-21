@@ -28,7 +28,8 @@ Abra duas abas em `http://localhost:3000`:
 
 ## O jogo
 
-Cada equipe começa com **100 pontos**.
+Cada equipe começa com **100 pontos** por padrão — o administrador pode
+definir outro valor inicial antes de cadastrar as equipes.
 
 | Ação                                    | Pontos                                  |
 | ---------------------------------------- | ---------------------------------------- |
@@ -44,14 +45,16 @@ Cada equipe começa com **100 pontos**.
 - **Colocação ao vivo**: as 3 equipes na frente ganham um selo de troféu
   (ouro, prata, bronze) tanto no painel do administrador quanto no Telão. Em
   caso de empate as equipes dividem a colocação e a seguinte pula (dois times
-  em 2º, o próximo é 4º). A ordem das equipes na tela é sempre fixa (ordem de
-  cadastro) — só o selo muda, pra ninguém perder o time de vista enquanto a
-  pontuação muda ao vivo.
+  em 2º, o próximo é 4º). No painel do administrador a ordem das equipes é
+  sempre fixa (ordem de cadastro) — só o selo muda, pra não perder o time de
+  vista enquanto pontua. No Telão as linhas seguem a colocação ao vivo, pra
+  quem está assistindo acompanhar a disputa subindo/descendo.
 - **Denúncia**: quando uma equipe flagra outra colando, vira um único evento
   no histórico (dois lançamentos ligados); desfazer reverte os dois juntos.
 - **Desfazer última ação**: reverte o lançamento (ou par de lançamentos) mais
   recente.
-- **Reiniciar tudo**: zera equipes, pontos, histórico e cronômetro.
+- **Reiniciar tudo**: zera equipes, pontos, histórico, cronômetro e o banco
+  de perguntas (as imagens enviadas também são apagadas).
 - **Finalizar jogo**: troca o Telão por um anúncio em destaque da equipe
   vencedora, com tratamento de empate e os selos de prata/bronze na lista das
   demais equipes.

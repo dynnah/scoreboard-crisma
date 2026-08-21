@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { basename, join } from "path";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { DEFAULT_TIMER_SEC, STARTING_SCORE, TEAM_COLOR_PALETTE } from "./rules";
+import { UPLOADS_DIR } from "./uploads";
 
 export type HistoryKind =
   | "correct"
@@ -39,10 +40,31 @@ export interface TimerState {
   status: TimerStatus;
 }
 
+export type QuestionKind = "texto" | "multipla-escolha" | "verdadeiro-falso" | "imagem";
+
+export interface Question {
+  id: string;
+  kind: QuestionKind;
+  label: string | null;
+  prompt: string;
+  options: string[];
+  correctOptionIndex: number | null;
+  imageUrl: string | null;
+  createdAt: number;
+}
+
+export interface QuestionsState {
+  items: Question[];
+  activeQuestionId: string | null;
+  revealed: boolean;
+}
+
 export interface AppState {
   teams: Team[];
   history: HistoryEntry[];
   timer: TimerState;
+  questions: QuestionsState;
+  startingScore: number;
   gameEnded: boolean;
   updatedAt: number;
 }
@@ -60,6 +82,8 @@ function freshState(): AppState {
       startedAt: null,
       status: "idle",
     },
+    questions: { items: [], activeQuestionId: null, revealed: false },
+    startingScore: STARTING_SCORE,
     gameEnded: false,
     updatedAt: Date.now(),
   };
@@ -69,7 +93,24 @@ function load(): AppState {
   if (existsSync(DATA_FILE)) {
     try {
       const raw = readFileSync(DATA_FILE, "utf-8");
-      return JSON.parse(raw) as AppState;
+      const loaded = JSON.parse(raw) as AppState;
+      // Compatibilidade com placar.json salvo antes da feature de perguntas
+      // (ou antes do campo de resposta correta/revelação ser adicionado).
+      if (!loaded.questions) {
+        loaded.questions = { items: [], activeQuestionId: null, revealed: false };
+      } else {
+        loaded.questions.revealed = loaded.questions.revealed ?? false;
+        loaded.questions.items = loaded.questions.items.map((q) => ({
+          ...q,
+          correctOptionIndex: q.correctOptionIndex ?? null,
+        }));
+      }
+      // Compatibilidade com placar.json salvo antes da pontuação inicial
+      // ser configurável — cai no valor padrão de rules.ts.
+      if (typeof loaded.startingScore !== "number") {
+        loaded.startingScore = STARTING_SCORE;
+      }
+      return loaded;
     } catch {
       return freshState();
     }
@@ -107,12 +148,18 @@ export function addTeam(name: string): Team {
     id: randomUUID(),
     name: name.trim(),
     color: pickColor(),
-    score: STARTING_SCORE,
+    score: state.startingScore,
     createdAt: Date.now(),
   };
   state.teams.push(team);
   persist();
   return team;
+}
+
+export function setStartingScore(value: number): void {
+  if (!Number.isFinite(value)) return;
+  state.startingScore = Math.round(value);
+  persist();
 }
 
 export function removeTeam(teamId: string): void {
@@ -193,6 +240,97 @@ export function undoLast(): void {
   persist();
 }
 
+const QUESTION_KINDS: QuestionKind[] = ["texto", "multipla-escolha", "verdadeiro-falso", "imagem"];
+
+export function addQuestion(input: {
+  kind?: QuestionKind;
+  label?: string;
+  prompt?: string;
+  options?: string[];
+  correctOptionIndex?: number;
+  imageUrl?: string;
+}): Question | null {
+  if (!input?.kind || !QUESTION_KINDS.includes(input.kind)) return null;
+
+  const prompt = (input.prompt ?? "").trim();
+  if (input.kind !== "imagem" && !prompt) return null;
+  if (input.kind === "imagem" && !input.imageUrl) return null;
+
+  let options: string[] = [];
+  let correctOptionIndex: number | null = null;
+  if (input.kind === "multipla-escolha") {
+    options = (input.options ?? []).map((o) => o.trim()).filter(Boolean);
+    if (options.length < 2) return null;
+    // Sem uma alternativa correta marcada não tem o que revelar no Telão
+    // depois — melhor recusar a pergunta aqui do que descobrir isso ao vivo.
+    if (
+      typeof input.correctOptionIndex !== "number" ||
+      !Number.isInteger(input.correctOptionIndex) ||
+      input.correctOptionIndex < 0 ||
+      input.correctOptionIndex >= options.length
+    ) {
+      return null;
+    }
+    correctOptionIndex = input.correctOptionIndex;
+  }
+  if (input.kind === "verdadeiro-falso") {
+    // Reaproveita correctOptionIndex pro V/F: 0 = Verdadeiro, 1 = Falso —
+    // mesmo motivo do bloco acima, sem isso não tem o que revelar depois.
+    if (input.correctOptionIndex !== 0 && input.correctOptionIndex !== 1) return null;
+    correctOptionIndex = input.correctOptionIndex;
+  }
+
+  const question: Question = {
+    id: randomUUID(),
+    kind: input.kind,
+    label: input.label?.trim() || null,
+    prompt,
+    options,
+    correctOptionIndex,
+    imageUrl: input.kind === "imagem" ? input.imageUrl! : null,
+    createdAt: Date.now(),
+  };
+  state.questions.items.push(question);
+  persist();
+  return question;
+}
+
+export function removeQuestion(questionId: string): void {
+  const question = state.questions.items.find((q) => q.id === questionId);
+  if (!question) return;
+  state.questions.items = state.questions.items.filter((q) => q.id !== questionId);
+  if (state.questions.activeQuestionId === questionId) {
+    state.questions.activeQuestionId = null;
+  }
+  if (question.imageUrl) {
+    try {
+      unlinkSync(join(UPLOADS_DIR, basename(question.imageUrl)));
+    } catch {
+      // Arquivo já pode não existir — não é motivo pra falhar a remoção.
+    }
+  }
+  persist();
+}
+
+export function showQuestion(questionId: string): void {
+  if (!state.questions.items.some((q) => q.id === questionId)) return;
+  state.questions.activeQuestionId = questionId;
+  state.questions.revealed = false;
+  persist();
+}
+
+export function hideQuestion(): void {
+  state.questions.activeQuestionId = null;
+  state.questions.revealed = false;
+  persist();
+}
+
+export function revealAnswer(): void {
+  if (!state.questions.activeQuestionId) return;
+  state.questions.revealed = true;
+  persist();
+}
+
 function clearEndTimeout(): void {
   if (endTimeout) {
     clearTimeout(endTimeout);
@@ -250,6 +388,17 @@ export function resetTimer(): void {
 
 export function resetAll(): void {
   clearEndTimeout();
+  // "Reiniciar tudo" zera o banco de perguntas junto — inclusive apagando as
+  // imagens enviadas, senão ficam órfãs em server/uploads/ pra sempre.
+  for (const question of state.questions.items) {
+    if (question.imageUrl) {
+      try {
+        unlinkSync(join(UPLOADS_DIR, basename(question.imageUrl)));
+      } catch {
+        // Arquivo já pode não existir — não é motivo pra travar o reset.
+      }
+    }
+  }
   state = freshState();
   persist();
 }

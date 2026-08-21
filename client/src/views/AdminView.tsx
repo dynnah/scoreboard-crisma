@@ -10,7 +10,7 @@ import type { HistoryKind } from "../types";
 const TIMER_PRESETS = [30, 60, 90, 120] as const;
 
 export function AdminView() {
-  const { state, connected, socket } = useSocketState();
+  const { state, connected, socket, clockOffsetMs } = useSocketState();
   const [newTeamName, setNewTeamName] = useState("");
   const [flaggedTeamId, setFlaggedTeamId] = useState("");
   const [accuserTeamId, setAccuserTeamId] = useState("");
@@ -139,6 +139,7 @@ export function AdminView() {
         <TimerControl
           timer={state.timer}
           presets={TIMER_PRESETS}
+          clockOffsetMs={clockOffsetMs}
           onSetDuration={(seconds) => socket.emit("timer:setDuration", { seconds })}
           onStart={() => socket.emit("timer:start")}
           onPause={() => socket.emit("timer:pause")}

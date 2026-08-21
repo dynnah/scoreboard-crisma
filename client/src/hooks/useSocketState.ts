@@ -14,10 +14,18 @@ function getSocket(): Socket {
 export function useSocketState() {
   const [state, setState] = useState<AppState | null>(null);
   const [connected, setConnected] = useState(false);
+  // Diferença entre o relógio do servidor e o deste navegador. O cronômetro
+  // é calculado localmente a partir de Date.now(), então sem esse ajuste um
+  // relógio desregulado faz a contagem exibida ficar adiantada ou atrasada
+  // enquanto o timer está rodando (mesmo com o servidor certo).
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
   const socket = getSocket();
 
   useEffect(() => {
-    const onSync = (s: AppState) => setState(s);
+    const onSync = (s: AppState & { serverNow: number }) => {
+      setState(s);
+      setClockOffsetMs(s.serverNow - Date.now());
+    };
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
 
@@ -33,5 +41,5 @@ export function useSocketState() {
     };
   }, [socket]);
 
-  return { state, connected, socket };
+  return { state, connected, socket, clockOffsetMs };
 }

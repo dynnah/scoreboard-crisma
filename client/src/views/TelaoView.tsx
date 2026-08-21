@@ -25,7 +25,7 @@ function ClockIcon() {
 }
 
 export function TelaoView() {
-  const { state, connected } = useSocketState();
+  const { state, connected, clockOffsetMs } = useSocketState();
   const [, forceTick] = useState(0);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function TelaoView() {
   // quem tá acompanhando de longe.
   const sortedTeams = [...state.teams].sort((a, b) => b.score - a.score);
   const ranks = rankTeams(sortedTeams);
-  const remainingMs = computeRemainingMs(state.timer);
+  const remainingMs = computeRemainingMs(state.timer, clockOffsetMs);
   const isZero = state.timer.status === "ended" || remainingMs <= 0;
 
   return (

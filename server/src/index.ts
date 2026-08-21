@@ -38,7 +38,11 @@ app.use((_req, res) => {
 });
 
 function broadcast(): void {
-  io.emit("state:sync", store.getState());
+  // serverNow deixa o cliente medir o desvio entre o relógio dele e o do
+  // servidor, já que o cronômetro é calculado a partir de Date.now() dos
+  // dois lados — sem isso, um relógio desregulado faz a contagem exibida
+  // ficar adiantada ou atrasada enquanto o timer roda.
+  io.emit("state:sync", { ...store.getState(), serverNow: Date.now() });
 }
 
 store.setOnTimerEnded(broadcast);

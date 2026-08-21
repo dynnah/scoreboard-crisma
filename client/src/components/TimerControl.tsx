@@ -4,6 +4,7 @@ import type { TimerState } from "../types";
 interface TimerControlProps {
   timer: TimerState;
   presets: readonly number[];
+  clockOffsetMs?: number;
   onSetDuration: (seconds: number) => void;
   onStart: () => void;
   onPause: () => void;
@@ -12,10 +13,14 @@ interface TimerControlProps {
 
 // Cronômetro calculado a partir de timestamps absolutos: o setInterval
 // abaixo só força um novo render, nunca decrementa o tempo — por isso
-// não há deriva mesmo que o navegador atrase um tick.
-export function computeRemainingMs(timer: TimerState): number {
+// não há deriva mesmo que o navegador atrase um tick. clockOffsetMs
+// corrige a diferença entre o relógio do navegador e o do servidor (que
+// gerou timer.startedAt) — sem isso, um relógio desregulado desloca a
+// contagem exibida enquanto o timer roda.
+export function computeRemainingMs(timer: TimerState, clockOffsetMs = 0): number {
   if (timer.status === "running" && timer.startedAt) {
-    return Math.max(0, timer.remainingAtStart - (Date.now() - timer.startedAt));
+    const now = Date.now() + clockOffsetMs;
+    return Math.max(0, timer.remainingAtStart - (now - timer.startedAt));
   }
   return Math.max(0, timer.remainingAtStart);
 }
@@ -27,7 +32,15 @@ export function formatMs(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function TimerControl({ timer, presets, onSetDuration, onStart, onPause, onReset }: TimerControlProps) {
+export function TimerControl({
+  timer,
+  presets,
+  clockOffsetMs = 0,
+  onSetDuration,
+  onStart,
+  onPause,
+  onReset,
+}: TimerControlProps) {
   const [, forceTick] = useState(0);
   const [customSeconds, setCustomSeconds] = useState("");
 
@@ -37,7 +50,7 @@ export function TimerControl({ timer, presets, onSetDuration, onStart, onPause, 
     return () => clearInterval(id);
   }, [timer.status]);
 
-  const remainingMs = computeRemainingMs(timer);
+  const remainingMs = computeRemainingMs(timer, clockOffsetMs);
   const isZero = timer.status === "ended";
 
   return (
